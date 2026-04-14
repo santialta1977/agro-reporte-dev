@@ -345,7 +345,6 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
       <a class="nav-item" onclick="navTo('composicion',this)" title="Composición"><span class="nav-icon">◉</span><span class="nav-label">Composición</span></a>
       <a class="nav-item" onclick="navTo('operaciones',this)" title="Operaciones"><span class="nav-icon">≡</span><span class="nav-label">Operaciones</span></a>
       <a class="nav-item" onclick="navTo('flujo',this)" title="Flujo de fondos"><span class="nav-icon">⟳</span><span class="nav-label">Flujo de fondos</span></a>
-      <a class="nav-item" onclick="navTo('nueva',this)" title="Nueva operación"><span class="nav-icon">＋</span><span class="nav-label">Nueva operación</span></a>
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-tagline">Asesoría estratégica<br>financiera agropecuaria</div>
@@ -481,7 +480,7 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
               <span style="font-size:11px;color:var(--gris);white-space:nowrap">Todo</span>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <select id="chart-prod" class="filter-btn" style="border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;border:1px solid var(--crema-dd)" onchange="renderPosicionesChart()">
+              <select id="chart-prod" class="filter-btn" style="border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;border:1px solid var(--crema-dd)" onchange="actualizarFiltroPos();renderPosicionesChart()">
                 <option value="">Todos los productos</option>
                 <option>Soja</option><option>Maiz</option><option>Trigo</option>
                 <option>Girasol</option><option>Sorgo</option><option>Cebada</option>
@@ -556,57 +555,10 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
             <tbody id="d-ops-body"></tbody>
           </table>
         </div>
-      </div>
-
-
-
-
-      <!-- Flujo de Fondos -->
-      <div class="section" id="sec-flujo">
-        <div class="section-title">Flujo de fondos</div>
-
-        <!-- Filtros -->
-        <div class="card" style="margin-bottom:16px">
-          <div class="flujo-filters">
-            <select class="flujo-filter-select" id="flujo-prod" onchange="renderFlujo()">
-              <option value="">Todos los productos</option>
-              <option>Soja</option><option>Maiz</option><option>Trigo</option>
-              <option>Girasol</option><option>Sorgo</option><option>Cebada</option>
-            </select>
-            <select class="flujo-filter-select" id="flujo-tipo" onchange="renderFlujo()">
-              <option value="">Todos los tipos</option>
-              <option>Precio</option><option>FIX</option><option>Forward</option>
-              <option>Futuro</option><option>Call</option><option>Put</option>
-            </select>
-          </div>
-          <!-- Chart -->
-          <div style="padding:16px">
-            <div style="position:relative;height:280px"><canvas id="flujoChart"></canvas></div>
-          </div>
-        </div>
-
-        <!-- Tabla -->
-        <div class="card">
-          <div style="overflow-x:auto">
-            <table class="flujo-table">
-              <thead>
-                <tr>
-                  <th>Mes</th>
-                  <th>Ingresos</th>
-                  <th>Egresos</th>
-                  <th>Neto</th>
-                  <th>Detalle</th>
-                </tr>
-              </thead>
-              <tbody id="flujo-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Nueva operación -->
-      <div class="section" id="sec-nueva">
-        <div class="section-title">Nueva operación</div>
+      
+        <!-- Nueva operación -->
+        <div style="margin-top:32px">
+          <div class="section-title">Nueva operación</div>
         <div class="card">
           <div class="form-grid">
             <div class="form-group">
@@ -678,7 +630,57 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
             <div class="card empty-state">Cargando...</div>
           </div>
         </div>
+        </div>
       </div>
+
+
+
+
+      <!-- Flujo de Fondos -->
+      <div class="section" id="sec-flujo">
+        <div class="section-title">Flujo de fondos</div>
+
+        <!-- Filtros -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="flujo-filters">
+            <select class="flujo-filter-select" id="flujo-prod" onchange="renderFlujo()">
+              <option value="">Todos los productos</option>
+              <option>Soja</option><option>Maiz</option><option>Trigo</option>
+              <option>Girasol</option><option>Sorgo</option><option>Cebada</option>
+            </select>
+            <select class="flujo-filter-select" id="flujo-tipo" onchange="renderFlujo()">
+              <option value="">Todos los tipos</option>
+              <option>Precio</option><option>FIX</option><option>Forward</option>
+              <option>Futuro</option><option>Call</option><option>Put</option>
+            </select>
+          </div>
+          <!-- Chart -->
+          <div style="padding:16px">
+            <div style="position:relative;height:280px"><canvas id="flujoChart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="card">
+          <div style="overflow-x:auto">
+            <table class="flujo-table">
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th>Ingresos</th>
+                  <th>Egresos</th>
+                  <th>Neto</th>
+                  <th>Detalle</th>
+                </tr>
+              </thead>
+              <tbody id="flujo-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nueva operación -->
+
 
     </div><!-- /page-body -->
   </div><!-- /main-content -->
@@ -1956,7 +1958,6 @@ function navTo(section, el) {
     'composicion': 'sec-composicion',
     'operaciones': 'sec-operaciones',
     'flujo':       'sec-flujo',
-    'nueva':       'sec-nueva'
   };
   const target = document.getElementById(map[section]);
   if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
