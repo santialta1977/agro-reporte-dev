@@ -122,7 +122,8 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
 .hero-meta    { font-size:12px; color:rgba(255,255,255,.4); margin-bottom:20px; }
 .kpis { display:grid; grid-template-columns:240px minmax(0,1fr); gap:16px; align-items:start; }
 .kpi-card { background:rgba(255,255,255,.07); border-radius:8px; padding:14px 16px; border:1px solid rgba(255,255,255,.06); }
-.kpi-card.full { grid-column:1; } .kpi-chart-col { background:rgba(255,255,255,.05); border-radius:8px; border:1px solid rgba(255,255,255,.06); padding:12px 14px; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+.kpi-card.full { grid-column:1; }
+.kpi-chart-col { background:rgba(255,255,255,.05); border-radius:8px; border:1px solid rgba(255,255,255,.06); padding:12px 14px; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
 .kpi-label { font-size:9px; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,.4); margin-bottom:6px; font-weight:600; }
 .kpi-value { font-size:20px; font-weight:600; color:white; line-height:1; }
 .kpi-value.accent { font-size:42px; font-weight:700; color:var(--oro-l); letter-spacing:-.5px; }
@@ -2560,7 +2561,7 @@ function renderEvolucion() {
       else       realizado += val;
     });
     if (realizado === 0 && pendiente === 0) continue;
-    const d2 = new Date(fecha + 'T12:00:00');
+    const d2 = new Date(fecha + 'T12:00:00Z');
     labels.push(d2.toLocaleDateString('es-AR',{month:'short',year:'2-digit'}));
     realizadoSeries.push(Math.round(realizado));
     pendienteSeries.push(Math.round(pendiente));
@@ -2570,9 +2571,13 @@ function renderEvolucion() {
 
   function buildChart(canvasId, compact, existingChart) {
     const ctx = document.getElementById(canvasId)?.getContext('2d');
-    if (!ctx) return null;
-    if (existingChart) existingChart.destroy();
-    return new Chart(ctx, {
+    if (!ctx) {
+      console.warn(`[buildChart] Canvas con ID "${canvasId}" no encontrado o no soporta 2D context`);
+      return null;
+    }
+    try {
+      if (existingChart) existingChart.destroy();
+      return new Chart(ctx, {
       type:'bar',
       data:{ labels, datasets:[
         { label:'Realizado',  data:realizadoSeries,  backgroundColor:'rgba(30,153,112,0.75)',  borderColor:'#1e9970', borderWidth:1, borderRadius:2, stack:'c' },
@@ -2581,8 +2586,30 @@ function renderEvolucion() {
       options:{
         responsive:true, maintainAspectRatio:false,
         scales:{
-          x:{ stacked:true, grid:{display:false}, ticks:{font:{size:compact?8:10},color:compact?'rgba(255,255,255,.4)':'#7fa8c4',maxRotation:45,maxTicksLimit:compact?6:20} },
-          y:{ stacked:true, grid:{color:'rgba(255,255,255,.07)'}, ticks:{font:{size:compact?9:11},color:compact?'rgba(255,255,255,.4)':'#7fa8c4',maxTicksLimit:5,callback:v=>{ if(v>=1000000) return '$'+(v/1000000).toFixed(1)+'M'; if(v>=1000) return '$'+(v/1000).toFixed(0)+'k'; return '$'+v; }} }
+          x:{
+            stacked:true,
+            grid:{display:false},
+            ticks:{
+              font:{size:compact?8:10},
+              color:compact?'rgba(255,255,255,.4)':'#7fa8c4',
+              maxRotation:45,
+              maxTicksLimit:compact?6:20
+            }
+          },
+          y:{
+            stacked:true,
+            grid:{color:'rgba(255,255,255,.07)'},
+            ticks:{
+              font:{size:compact?9:11},
+              color:compact?'rgba(255,255,255,.4)':'#7fa8c4',
+              maxTicksLimit:5,
+              callback:v=>{
+                if(v>=1000000) return '$'+(v/1000000).toFixed(1)+'M';
+                if(v>=1000) return '$'+(v/1000).toFixed(0)+'k';
+                return '$'+v;
+              }
+            }
+          }
         },
         plugins:{
           legend:{display:false},
@@ -2594,6 +2621,10 @@ function renderEvolucion() {
         }
       }
     });
+    } catch (error) {
+      console.error(`[buildChart] Error creando gráfico "${canvasId}":`, error);
+      return null;
+    }
   }
 
   window._evolucionChartHero = buildChart('evolucionChartHero', true,  window._evolucionChartHero);
