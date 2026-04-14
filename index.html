@@ -480,7 +480,7 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
               <span style="font-size:11px;color:var(--gris);white-space:nowrap">Todo</span>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <select id="chart-prod" class="filter-btn" style="border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;border:1px solid var(--crema-dd)" onchange="actualizarFiltroPos();renderPosicionesChart()">
+              <select id="chart-prod" class="filter-btn" style="border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;border:1px solid var(--crema-dd)" onchange="renderPosicionesChart()">
                 <option value="">Todos los productos</option>
                 <option>Soja</option><option>Maiz</option><option>Trigo</option>
                 <option>Girasol</option><option>Sorgo</option><option>Cebada</option>
@@ -556,13 +556,13 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
           </table>
         </div>
       
-        <!-- Nueva operación (desplegable) -->
+        <!-- Nueva operación (acordeón) -->
         <div style="margin-top:32px">
-          <div class="section-title" onclick="toggleAccordion('acc-nueva')" style="cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between">
+          <div class="section-title" onclick="toggleAcc('acc-nueva','icon-nueva')" style="cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;padding-right:4px">
             <span>Nueva operación</span>
-            <span id="acc-nueva-icon" style="font-size:14px;color:var(--gris);transition:transform .2s">▼</span>
+            <span id="icon-nueva" style="font-size:13px;color:var(--gris);transition:transform .25s">▼</span>
           </div>
-          <div id="acc-nueva" style="display:none">
+          <div id="acc-nueva" style="display:none;margin-top:12px">
         <div class="card">
           <div class="form-grid">
             <div class="form-group">
@@ -630,13 +630,13 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
           </div><!-- /acc-nueva -->
         </div>
 
-        <!-- Mis operaciones cargadas (desplegable) -->
+        <!-- Mis operaciones (acordeón) -->
         <div style="margin-top:16px">
-          <div class="section-title" onclick="toggleAccordion('acc-ops')" style="cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between">
+          <div class="section-title" onclick="toggleAcc('acc-ops','icon-ops')" style="cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between;padding-right:4px">
             <span>Mis operaciones cargadas</span>
-            <span id="acc-ops-icon" style="font-size:14px;color:var(--gris);transition:transform .2s">▼</span>
+            <span id="icon-ops" style="font-size:13px;color:var(--gris);transition:transform .25s">▼</span>
           </div>
-          <div id="acc-ops" style="display:none">
+          <div id="acc-ops" style="display:none;margin-top:12px">
             <div id="ops-guardadas-wrap">
               <div class="card empty-state">Cargando...</div>
             </div>
@@ -1767,6 +1767,15 @@ async function refreshData() {
 function showLoading(s) {
   document.getElementById('loadingScreen').style.display = s?'flex':'none';
 }
+function toggleAcc(id, iconId) {
+  const el   = document.getElementById(id);
+  const icon = document.getElementById(iconId);
+  if (!el) return;
+  const open = el.style.display === 'none';
+  el.style.display = open ? 'block' : 'none';
+  if (icon) icon.style.transform = open ? 'rotate(180deg)' : '';
+}
+
 function fmtUSD(n) {
   const abs = Math.abs(n);
   const sign = n<0?'-':'';
@@ -2013,26 +2022,14 @@ function actualizarFiltroPos() {
   const prod = document.getElementById('chart-prod').value;
   const sel  = document.getElementById('chart-pos');
   const current = sel.value;
-  // Normalize product name for comparison
-  const normalProd = prod ? normalizeStr(prod) : '';
-  // Get unique posiciones for selected product from histData
+  // Get unique posiciones for selected product
   const posiciones = [...new Set(
     histData
-      .filter(r => !normalProd || normalizeStr(r.producto) === normalProd)
+      .filter(r => !prod || r.producto === prod)
       .map(r => r.posicion)
-  )].sort((a, b) => {
-    // Sort: CONT first, then by year+month
-    if (a === 'CONT') return -1;
-    if (b === 'CONT') return 1;
-    const [ma, ya] = a.split('_').map(Number);
-    const [mb, yb] = b.split('_').map(Number);
-    return ya !== yb ? ya - yb : ma - mb;
-  });
+  )].sort();
   sel.innerHTML = '<option value="">Todos los vencimientos</option>'
-    + posiciones.map(p => {
-        const label = p === 'CONT' ? 'Continuo' : p;
-        return '<option value="'+p+'">'+label+'</option>';
-      }).join('');
+    + posiciones.map(p => '<option value="'+p+'">'+p+'</option>').join('');
   if (posiciones.includes(current)) sel.value = current;
 }
 
