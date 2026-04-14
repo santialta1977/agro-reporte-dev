@@ -556,9 +556,13 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
           </table>
         </div>
       
-        <!-- Nueva operación -->
+        <!-- Nueva operación (desplegable) -->
         <div style="margin-top:32px">
-          <div class="section-title">Nueva operación</div>
+          <div class="section-title" onclick="toggleAccordion('acc-nueva')" style="cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between">
+            <span>Nueva operación</span>
+            <span id="acc-nueva-icon" style="font-size:14px;color:var(--gris);transition:transform .2s">▼</span>
+          </div>
+          <div id="acc-nueva" style="display:none">
         <div class="card">
           <div class="form-grid">
             <div class="form-group">
@@ -623,13 +627,20 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
             </div>
           </div>
         </div>
-        <!-- Operaciones cargadas -->
-        <div style="margin-top:20px">
-          <div class="section-title" style="font-size:10px">Mis operaciones cargadas</div>
-          <div id="ops-guardadas-wrap">
-            <div class="card empty-state">Cargando...</div>
-          </div>
+          </div><!-- /acc-nueva -->
         </div>
+
+        <!-- Mis operaciones cargadas (desplegable) -->
+        <div style="margin-top:16px">
+          <div class="section-title" onclick="toggleAccordion('acc-ops')" style="cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between">
+            <span>Mis operaciones cargadas</span>
+            <span id="acc-ops-icon" style="font-size:14px;color:var(--gris);transition:transform .2s">▼</span>
+          </div>
+          <div id="acc-ops" style="display:none">
+            <div id="ops-guardadas-wrap">
+              <div class="card empty-state">Cargando...</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2002,14 +2013,26 @@ function actualizarFiltroPos() {
   const prod = document.getElementById('chart-prod').value;
   const sel  = document.getElementById('chart-pos');
   const current = sel.value;
-  // Get unique posiciones for selected product
+  // Normalize product name for comparison
+  const normalProd = prod ? normalizeStr(prod) : '';
+  // Get unique posiciones for selected product from histData
   const posiciones = [...new Set(
     histData
-      .filter(r => !prod || r.producto === prod)
+      .filter(r => !normalProd || normalizeStr(r.producto) === normalProd)
       .map(r => r.posicion)
-  )].sort();
+  )].sort((a, b) => {
+    // Sort: CONT first, then by year+month
+    if (a === 'CONT') return -1;
+    if (b === 'CONT') return 1;
+    const [ma, ya] = a.split('_').map(Number);
+    const [mb, yb] = b.split('_').map(Number);
+    return ya !== yb ? ya - yb : ma - mb;
+  });
   sel.innerHTML = '<option value="">Todos los vencimientos</option>'
-    + posiciones.map(p => '<option value="'+p+'">'+p+'</option>').join('');
+    + posiciones.map(p => {
+        const label = p === 'CONT' ? 'Continuo' : p;
+        return '<option value="'+p+'">'+label+'</option>';
+      }).join('');
   if (posiciones.includes(current)) sel.value = current;
 }
 
