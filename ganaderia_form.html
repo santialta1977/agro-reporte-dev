@@ -40,7 +40,14 @@
   --r:10px;--r-sm:6px;
 }
 body{font-family:'DM Sans',-apple-system,sans-serif;font-size:14px;color:var(--txt);background:var(--bg);min-height:100vh}
-.wrap{max-width:700px;margin:0 auto;padding:1.5rem 1rem 4rem}
+.wrap{max-width:1060px;margin:0 auto;padding:1.5rem 1.5rem 4rem}
+.panel-grid{display:grid;grid-template-columns:500px 500px;gap:24px;align-items:start;margin-top:1rem}
+.panel-left{display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel-right{display:flex;flex-direction:column;gap:16px;min-width:0;position:sticky;top:1rem}
+@media(max-width:1080px){
+  .panel-grid{grid-template-columns:1fr}
+  .panel-right{position:static}
+}
 
 /* ── HEADER CTX ── */
 .ctx-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
@@ -206,11 +213,9 @@ input[type=number]:focus,select:focus{border-color:var(--verde);background:var(-
   </div></div>
 </div>
 
-<!-- CLIENTE + GUARDAR/CARGAR -->
-
 <div class="panel-grid">
 
-  <!-- ── LEFT COLUMN ── -->
+  <!-- ── COLUMNA IZQUIERDA ── -->
   <div class="panel-left">
     <div class="cliente-bar">
   <div class="cliente-row">
@@ -401,25 +406,23 @@ input[type=number]:focus,select:focus{border-color:var(--verde);background:var(-
 </div>
   </div>
 
-  <!-- ── RIGHT COLUMN ── -->
+  <!-- ── COLUMNA DERECHA ── -->
   <div class="panel-right">
     <div id="esc_card" class="card" style="display:none">
   <div class="card-hdr"><div><div class="card-title">Escenarios de precio</div><div class="card-sub">Variá los precios de categorías e insumos clave</div></div></div>
   <div class="fields"><div id="esc_wrap"></div></div>
 </div>
-
-<!-- REPORTE -->
     <div id="rep_card" class="rep-card" style="display:none">
   <div id="rep_content"></div>
 </div>
-
-</div>
-
-<!-- MODAL HISTORIAL -->
+    <div id="rep_placeholder" style="background:var(--negro-s);border:1px solid var(--border);border-radius:var(--r);padding:2rem;text-align:center;color:var(--gris);font-size:13px">
+    <div style="font-size:28px;margin-bottom:12px">◈</div>
+    <div style="font-weight:600;margin-bottom:6px;color:var(--texto)">Activá una actividad para ver el análisis</div>
+    <div style="font-size:12px">Habilitá Cría, Recría o Invernada en la columna izquierda</div>
+  </div>
   </div>
 
 </div><!-- /panel-grid -->
-
 </div><!-- /wrap -->
 
 <div class="modal-bg" id="modal_hist" onclick="if(event.target===this)cerrarHistorial()">
@@ -922,7 +925,9 @@ function cellClass(v){ return v>50000?'cell-pos':v<-50000?'cell-neg':'cell-neu';
 
 // ── RENDER REPORTE ──────────────────────────────────────────
 function recalc(){
-  if(!st.cria&&!st.recria&&!st.inv){ document.getElementById('rep_card').style.display='none'; return; }
+  if(!st.cria&&!st.recria&&!st.inv){ document.getElementById('rep_card').style.display='none';
+  var ph=document.getElementById('rep_placeholder'); if(ph) ph.style.display='block';
+  var ph=document.getElementById('rep_placeholder'); if(ph) ph.style.display='flex'; return; }
   var base=calcCore('b'),pes=calcCore('p'),opt=calcCore('o');
   var supT=n('sup_total');
   var sens=calcSens(),eq=calcEQ();
@@ -1075,6 +1080,8 @@ function recalc(){
   html+='</div></div>'; // close col-right + two-col-rep
   document.getElementById('rep_content').innerHTML=html;
   document.getElementById('rep_card').style.display='block';
+  var ph=document.getElementById('rep_placeholder'); if(ph) ph.style.display='none';
+  document.getElementById('rep_placeholder').style.display='none';
 }
 </script>
 </body>
@@ -1570,7 +1577,9 @@ function cellClass(v){ return v>50000?'cell-pos':v<-50000?'cell-neg':'cell-neu';
 
 // ── RENDER REPORTE ──────────────────────────────────────────
 function recalc(){
-  if(!st.cria&&!st.recria&&!st.inv){ document.getElementById('rep_card').style.display='none'; return; }
+  if(!st.cria&&!st.recria&&!st.inv){ document.getElementById('rep_card').style.display='none';
+  var ph=document.getElementById('rep_placeholder'); if(ph) ph.style.display='block';
+  var ph=document.getElementById('rep_placeholder'); if(ph) ph.style.display='flex'; return; }
   var base=calcCore('b'),pes=calcCore('p'),opt=calcCore('o');
   var supT=n('sup_total');
   var sens=calcSens(),eq=calcEQ();
@@ -1723,6 +1732,8 @@ function recalc(){
   html+='</div></div>'; // close col-right + two-col-rep
   document.getElementById('rep_content').innerHTML=html;
   document.getElementById('rep_card').style.display='block';
+  var ph=document.getElementById('rep_placeholder'); if(ph) ph.style.display='none';
+  document.getElementById('rep_placeholder').style.display='none';
 }
 </script>
 </body>
