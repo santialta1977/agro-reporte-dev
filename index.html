@@ -1386,7 +1386,7 @@ function buildGanaderiaSrc(mode) {
   const clienteNombre = currentCliente?.nombre_empresa || '';
   const userId = currentUser?.id || '';
   const base = mode === 'PRO'
-    ? 'Ganaderia/ganaderia_PRO_integrado_dev_v3.html'
+      ? 'Ganaderia/ganaderia_PRO_integrado_dev_v4.html'
     : 'Ganaderia/ganaderia_ESTANDAR_integrado_dev_v3.html';
   const qs = new URLSearchParams();
   if (clienteId) qs.set('cliente_id', clienteId);
