@@ -149,6 +149,9 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
 .dashboard-view { display:none; }
 .dashboard-view.active { display:block; }
 .embedded-dashboard { background:linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01)), var(--negro-s); border:1px solid rgba(255,255,255,.08); border-radius:14px; overflow:hidden; box-shadow:var(--sombra); }
+.dashboard-view.integrated-embed .page-body { padding:20px 28px 28px; }
+.dashboard-view.integrated-embed .embedded-dashboard { background:transparent; border:none; border-radius:0; box-shadow:none; overflow:visible; }
+.dashboard-view.integrated-embed .embedded-frame { min-height:calc(100vh - 120px); background:transparent; }
 .embedded-frame { width:100%; min-height:calc(100vh - 120px); border:0; background:var(--negro-b); display:block; }
 .account-shell { display:grid; gap:18px; }
 .account-hero { background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:22px 24px; }
@@ -827,10 +830,10 @@ body { background:var(--negro-b); color:var(--texto); min-height:100vh; -webkit-
     </div><!-- /page-body -->
     </div><!-- /view-agricultura -->
 
-    <div class="dashboard-view" id="view-ganaderia">
+    <div class="dashboard-view integrated-embed" id="view-ganaderia">
       <div class="page-body">
         <div class="embedded-dashboard">
-          <iframe class="embedded-frame" id="frame-ganaderia" src="Ganaderia/ganaderia_ESTANDAR_integrado_dev_v2.html" title="Dashboard Ganadería"></iframe>
+          <iframe class="embedded-frame" id="frame-ganaderia" src="Ganaderia/ganaderia_ESTANDAR_integrado_dev_v3.html" title="Dashboard Ganadería"></iframe>
         </div>
       </div>
     </div>
@@ -1383,8 +1386,8 @@ function buildGanaderiaSrc(mode) {
   const clienteNombre = currentCliente?.nombre_empresa || '';
   const userId = currentUser?.id || '';
   const base = mode === 'PRO'
-    ? 'Ganaderia/ganaderia_PRO_integrado_dev_v2.html'
-    : 'Ganaderia/ganaderia_ESTANDAR_integrado_dev_v2.html';
+    ? 'Ganaderia/ganaderia_PRO_integrado_dev_v3.html'
+    : 'Ganaderia/ganaderia_ESTANDAR_integrado_dev_v3.html';
   const qs = new URLSearchParams();
   if (clienteId) qs.set('cliente_id', clienteId);
   if (clienteNombre) qs.set('cliente_nombre', clienteNombre);
