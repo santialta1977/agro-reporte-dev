@@ -1,7 +1,7 @@
-const CACHE = 'ctx-cartera-v1';
+const CACHE = 'ctx-cartera-dev-v7-agente-paneles';
 const ASSETS = [
-  '/agro-reporte/',
-  '/agro-reporte/index.html'
+  '/agro-reporte-dev/',
+  '/agro-reporte-dev/index.html'
 ];
 
 self.addEventListener('install', e => {
@@ -24,7 +24,7 @@ self.addEventListener('fetch', e => {
   // Solo cachea el HTML principal, el resto va a la red
   if (e.request.mode === 'navigate') {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match('/agro-reporte/index.html'))
+      fetch(e.request, { cache: 'no-store' }).catch(() => caches.match('/agro-reporte-dev/index.html'))
     );
   }
   // Recursos externos (Supabase, Chart.js, etc.) siempre van a la red
