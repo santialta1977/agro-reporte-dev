@@ -6570,6 +6570,71 @@ window.addEventListener('load', async () => {
       .replace(/^\s*[-•]\s+/gm, '• ')
       .replace(/\n/g, '<br>');
   }
+
+  function esConsultaTrading(mensaje) {
+    const t = String(mensaje || '').toLowerCase();
+    return t.includes('d4 + delta') || t.includes('diagnosticá mi cartera por delta') || t.includes('delta neto');
+  }
+
+  function fmtUSDAsesor(n) {
+    const v = Number(n);
+    if (!Number.isFinite(v)) return 's/d';
+    return 'USD ' + Math.round(v).toLocaleString('es-AR');
+  }
+
+  function renderTradingFallback(ctx) {
+    const d = ctx?.trading_diagnostics || {};
+    const rows = Array.isArray(d.por_producto) ? d.por_producto : [];
+    const top = rows.slice().sort((a, b) => Math.abs(b.neto_usd || 0) - Math.abs(a.neto_usd || 0)).slice(0, 4);
+    const alertas = Array.isArray(d.alertas) ? d.alertas : [];
+    const derivados = d.derivados || {};
+    const flujo = d.flujo || {};
+    const tasas = Array.isArray(d.tasas_implicitas) ? d.tasas_implicitas : [];
+
+    let html = '<b>Diagnóstico trading preliminar</b><br>';
+    html += '<span style="color:var(--gris)">La función IA de DEV no está desplegada, pero armé una lectura automática con los cálculos del panel.</span><br><br>';
+
+    if (top.length) {
+      html += '<b>Exposición por producto</b><br>';
+      top.forEach(r => {
+        html += '• ' + esc(r.producto) + ': neto ' + Number(r.neto_tn || 0).toLocaleString('es-AR') +
+          ' tn · delta bruto ' + (r.delta_sobre_bruto_pct ?? 's/d') + '% · neto ' + fmtUSDAsesor(r.neto_usd) + '<br>';
+      });
+    } else {
+      html += '• No encontré posiciones activas para calcular delta por producto.<br>';
+    }
+
+    html += '<br><b>Derivados</b><br>';
+    html += '• Total: ' + (derivados.total || 0) +
+      ' · vigentes: ' + (derivados.vigentes || 0) +
+      ' · vencidos no entregados: ' + (derivados.vencidos_no_entregados || 0) +
+      ' · entregados: ' + (derivados.entregados || 0) + '<br>';
+
+    html += '<br><b>Flujo proyectado</b><br>';
+    html += '• Ingresos: ' + fmtUSDAsesor(flujo.total_ingresos_usd) +
+      ' · egresos: ' + fmtUSDAsesor(flujo.total_egresos_usd) + '<br>';
+    if (Array.isArray(flujo.meses_negativos) && flujo.meses_negativos.length) {
+      html += '• Meses con neto negativo: ' + flujo.meses_negativos.map(m => esc(m.mes)).join(', ') + '<br>';
+    }
+
+    if (tasas.length) {
+      const mejores = tasas.slice().sort((a, b) => (b.tna_pct || 0) - (a.tna_pct || 0)).slice(0, 3);
+      html += '<br><b>Tasas implícitas destacadas</b><br>';
+      mejores.forEach(t => {
+        html += '• ' + esc(t.producto) + ' ' + esc(t.vencimiento) + ': directa ' +
+          (t.tasa_directa_pct ?? 's/d') + '% · TNA ' + (t.tna_pct ?? 's/d') + '%<br>';
+      });
+    }
+
+    if (alertas.length) {
+      html += '<br><b>Alertas para revisar</b><br>';
+      alertas.slice(0, 5).forEach(a => { html += '• ' + esc(a) + '<br>'; });
+    }
+
+    html += '<br><span style="color:var(--gris)">Cuando despleguemos <b>agente-agro</b> en Supabase DEV, este diagnóstico se convertirá en análisis conversacional completo.</span>';
+    return html;
+  }
+
   function addMsg(role, html) {
     const chat = document.getElementById('asesor-chat');
     if (!chat) return null;
@@ -6601,6 +6666,7 @@ window.addEventListener('load', async () => {
     const typing = addMsg('ia', '<span class="asesor-typing"><span></span><span></span><span></span></span>');
 
     try {
+      const contexto = construirContexto();
       const resp = await fetch(FN_URL, {
         method: 'POST',
         headers: {
@@ -6610,19 +6676,34 @@ window.addEventListener('load', async () => {
         body: JSON.stringify({
           panel: 'agricultura',
           mensaje,
-          contexto: construirContexto(),
+          contexto,
           historial: historial.slice(0, -1),
         }),
       });
-      const data = await resp.json();
+      const raw = await resp.text();
+      let data = {};
+      try { data = raw ? JSON.parse(raw) : {}; }
+      catch (parseErr) { data = { error: raw || resp.statusText }; }
       if (!resp.ok || data.error) {
+        const code = data.code || '';
+        const msg = data.error || data.message || resp.statusText || '';
+        console.warn('Asesor IA agricultura error:', resp.status, code, msg, data);
+        if (typing && resp.status === 404 && code === 'NOT_FOUND' && esConsultaTrading(mensaje)) {
+          typing.innerHTML = renderTradingFallback(contexto);
+          historial.push({ role: 'assistant', content: 'Diagnóstico trading preliminar generado localmente por falta de agente-agro en DEV.' });
+          return;
+        }
         if (typing) typing.innerHTML = 'Hubo un problema al generar el análisis. ' +
-          (data.error ? esc(data.error) : '') + ' Probá de nuevo en un momento.';
+          (resp.status ? 'HTTP ' + resp.status + '. ' : '') +
+          (code ? esc(code) + '. ' : '') +
+          (msg ? esc(msg) + ' ' : '') +
+          'Probá de nuevo en un momento.';
         return;
       }
       if (typing) typing.innerHTML = fmt(data.texto || 'Sin respuesta.');
       historial.push({ role: 'assistant', content: data.texto || '' });
     } catch (e) {
+      console.warn('Asesor IA agricultura fetch error:', e);
       if (typing) typing.innerHTML = 'No pude conectar con el asesor. Revisá tu conexión e intentá de nuevo.';
     } finally {
       if (sendBtn) sendBtn.disabled = false;
